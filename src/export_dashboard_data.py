@@ -47,12 +47,16 @@ def export_dashboard_data():
     w_sku = pd.read_parquet(data_dir / "weekly_sku_demand_retail.parquet")
     fc_13 = pd.read_parquet(data_dir / "final_forecast_next13weeks.parquet")
     inv = pd.read_parquet(data_dir / "inventory_policy.parquet")
+    bm = pd.read_parquet(data_dir / "backtest_metrics.parquet")
+    lm = pd.read_parquet(data_dir / "lgbm_metrics.parquet")
 
     universe_skus = set(fu["StockCode"].tolist())
     print(f"Loaded Forecast Universe: {len(universe_skus):,} SKUs")
     print(f"Loaded Weekly SKU Demand: {len(w_sku):,} rows")
     print(f"Loaded Final Forecast: {len(fc_13):,} rows")
     print(f"Loaded Inventory Policy: {len(inv):,} rows")
+    print(f"Loaded Backtest Metrics: {len(bm):,} rows")
+    print(f"Loaded LightGBM Metrics: {len(lm):,} rows")
 
     # -------------------------------------------------------------
     # 2. Build File 1: overview.json
@@ -226,6 +230,46 @@ def export_dashboard_data():
     # 7. Build File 6: model_performance.json
     # -------------------------------------------------------------
     print("\n--- 7. BUILDING model_performance.json ---")
+    bm_macro = bm[bm["slice_type"] == "macro"]
+    lm_macro = lm[lm["slice_type"] == "macro"]
+
+    # Extract dynamic macro metrics directly from source parquet files
+    f1_twe = lm_macro[(lm_macro["fold"] == 1) & (lm_macro["model"] == "LightGBM_Tweedie")].iloc[0]
+    f1_ses = bm_macro[(bm_macro["fold"] == 1) & (bm_macro["model"] == "SES_seasonal")].iloc[0]
+    f2_twe = lm_macro[(lm_macro["fold"] == 2) & (lm_macro["model"] == "LightGBM_Tweedie")].iloc[0]
+    f2_ma4 = bm_macro[(bm_macro["fold"] == 2) & (bm_macro["model"] == "MA4")].iloc[0]
+    f3_twe = lm_macro[(lm_macro["fold"] == 3) & (lm_macro["model"] == "LightGBM_Tweedie")].iloc[0]
+    f3_ses = bm_macro[(bm_macro["fold"] == 3) & (bm_macro["model"] == "SES_seasonal")].iloc[0]
+
+    macro_by_fold = [
+        {"fold": 1, "model": "LightGBM (Tweedie)", "macro_wape": round(float(f1_twe["macro_wape"]), 2), "macro_bias": round(float(f1_twe["macro_bias"]), 2), "winner": False},
+        {"fold": 1, "model": "SES_seasonal", "macro_wape": round(float(f1_ses["wape"]), 2), "macro_bias": round(float(f1_ses["bias"]), 2), "winner": True},
+        {"fold": 2, "model": "LightGBM (Tweedie)", "macro_wape": round(float(f2_twe["macro_wape"]), 2), "macro_bias": round(float(f2_twe["macro_bias"]), 2), "winner": False},
+        {"fold": 2, "model": "MA4", "macro_wape": round(float(f2_ma4["wape"]), 2), "macro_bias": round(float(f2_ma4["bias"]), 2), "winner": True},
+        {"fold": 3, "model": "LightGBM (Tweedie)", "macro_wape": round(float(f3_twe["macro_wape"]), 2), "macro_bias": round(float(f3_twe["macro_bias"]), 2), "winner": False},
+        {"fold": 3, "model": "SES_seasonal", "macro_wape": round(float(f3_ses["wape"]), 2), "macro_bias": round(float(f3_ses["bias"]), 2), "winner": True}
+    ]
+
+    # Verification Assertion: Compare every row in macro_by_fold against source parquet
+    for row in macro_by_fold:
+        f = row["fold"]
+        m = row["model"]
+        if "LightGBM" in m:
+            src = lm_macro[(lm_macro["fold"] == f) & (lm_macro["model"] == "LightGBM_Tweedie")].iloc[0]
+            src_w = float(src["macro_wape"])
+            src_b = float(src["macro_bias"])
+        else:
+            base_m = "SES_seasonal" if "SES" in m else "MA4"
+            src = bm_macro[(bm_macro["fold"] == f) & (bm_macro["model"] == base_m)].iloc[0]
+            src_w = float(src["wape"])
+            src_b = float(src["bias"])
+
+        diff_w = abs(row["macro_wape"] - src_w)
+        diff_b = abs(row["macro_bias"] - src_b)
+        assert diff_w <= 0.01, f"Assertion failed: Fold {f} {m} macro_wape differs ({row['macro_wape']} vs {src_w}, diff={diff_w})"
+        assert diff_b <= 0.01, f"Assertion failed: Fold {f} {m} macro_bias differs ({row['macro_bias']} vs {src_b}, diff={diff_b})"
+    print("✅ Macro-by-fold validation assertion PASSED against source parquet files.")
+
     model_perf = {
         "sku_leaderboard": [
             {"model": "MA4 (Selected Point Engine)", "wape": 75.83, "bias": -17.42, "mase": 0.940, "is_best_wape": True},
@@ -236,14 +280,7 @@ def export_dashboard_data():
             {"model": "SES", "wape": 81.72, "bias": -31.10, "mase": 0.994},
             {"model": "LightGBM (P50 Quantile)", "wape": 68.98, "bias": -39.05, "mase": 0.753, "note": "Median objective; not valid for aggregate volume"}
         ],
-        "macro_by_fold": [
-            {"fold": 1, "model": "LightGBM (Tweedie)", "macro_wape": 18.70, "macro_bias": -8.93, "winner": False},
-            {"fold": 1, "model": "SES_seasonal", "macro_wape": 16.23, "macro_bias": -13.91, "winner": True},
-            {"fold": 2, "model": "LightGBM (Tweedie)", "macro_wape": 11.52, "macro_bias": 10.16, "winner": False},
-            {"fold": 2, "model": "MA4", "macro_wape": 8.44, "macro_bias": -3.20, "winner": True},
-            {"fold": 3, "model": "LightGBM (Tweedie)", "macro_wape": 16.19, "macro_bias": -10.45, "winner": False},
-            {"fold": 3, "model": "SES_seasonal", "macro_wape": 9.04, "macro_bias": -5.87, "winner": True}
-        ],
+        "macro_by_fold": macro_by_fold,
         "policy_simulation": [
             {"policy": "Quantile ROP", "fill_rate": 79.20, "stockout_pct": 11.03, "unfulfilled_pct": 20.80, "avg_overstock": 217960, "target": "90% Empirical Non-Parametric"},
             {"policy": "Classical 90% CSL", "fill_rate": 83.35, "stockout_pct": 13.89, "unfulfilled_pct": 16.65, "avg_overstock": 194147, "target": "90% Parametric Gaussian (z=1.282)"},
