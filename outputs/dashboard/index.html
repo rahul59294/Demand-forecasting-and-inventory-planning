@@ -1,0 +1,2202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AURA // Demand Forecasting & Inventory Planning Intelligence</title>
+  
+  <!-- Premium Fonts: Plus Jakarta Sans & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  
+  <!-- Vendored Chart.js with CDN Fallback -->
+  <script src="vendor/chart.umd.min.js"></script>
+  <script>
+    if (typeof Chart === 'undefined') {
+      document.write('<script src="https://cdn.jsdelivr.net/npm/chart.js"><\/script>');
+    }
+  </script>
+
+  <style>
+    /* =========================================================================
+       DESIGN SYSTEM: BESPOKE NEO-MODERN LUXURY UI
+       Inspired by high-craft Dribbble concepts (Donezo, Nixtio, ACRU)
+       ========================================================================= */
+    :root {
+      --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+
+      /* Canvas & Surfaces (Light Luxury: Sage Sand + Porcelain) */
+      --canvas-bg: #e9ece7;
+      --frame-bg: #fbfdfa;
+      --card-bg: #ffffff;
+      --card-subtle: #f4f6f2;
+      --card-hover: #f0f4ee;
+      --border-subtle: #e3e8e1;
+      --border-strong: #d2dcd0;
+
+      /* Text Hierarchy */
+      --text-hero: #0e1713;
+      --text-body: #233129;
+      --text-muted: #64756b;
+      --text-dim: #8fa096;
+
+      /* Signature Brand Accents */
+      --forest-primary: #123326;
+      --forest-card: #14382a;
+      --forest-hover: #1b4b38;
+      --neon-lime: #cbf33e;
+      --neon-lime-soft: rgba(203, 243, 62, 0.2);
+      --mint-glow: #10b981;
+      --mint-soft: rgba(16, 185, 129, 0.12);
+
+      /* Semantic ABC Classes */
+      --color-abc-a: #123326;
+      --color-abc-a-bg: rgba(18, 51, 38, 0.08);
+      --color-abc-b: #b45309;
+      --color-abc-b-bg: rgba(245, 158, 11, 0.12);
+      --color-abc-c: #526359;
+      --color-abc-c-bg: rgba(82, 99, 89, 0.1);
+
+      /* Semantic Demand Patterns */
+      --color-pat-smooth: #059669;
+      --color-pat-smooth-bg: rgba(5, 150, 105, 0.12);
+      --color-pat-erratic: #0284c7;
+      --color-pat-erratic-bg: rgba(2, 132, 199, 0.12);
+      --color-pat-intermittent: #d97706;
+      --color-pat-intermittent-bg: rgba(217, 119, 6, 0.12);
+      --color-pat-lumpy: #e11d48;
+      --color-pat-lumpy-bg: rgba(225, 29, 72, 0.12);
+
+      /* Disagreement Pill */
+      --warn-badge-bg: #fffbeb;
+      --warn-badge-text: #92400e;
+      --warn-badge-border: #fcd34d;
+
+      /* Shadows & Radii */
+      --radius-frame: 28px;
+      --radius-card: 20px;
+      --radius-pill: 9999px;
+      --radius-btn: 12px;
+      --shadow-frame: 0 24px 60px -12px rgba(18, 51, 38, 0.08), 0 8px 24px -4px rgba(0, 0, 0, 0.03);
+      --shadow-card: 0 4px 16px -2px rgba(18, 51, 38, 0.03), 0 1px 3px rgba(0, 0, 0, 0.02);
+      --shadow-hover: 0 12px 28px -6px rgba(18, 51, 38, 0.07);
+    }
+
+    /* Dark Mode (High-Tech Obsidian & Neon Chartreuse) */
+    html.dark {
+      --canvas-bg: #090e0b;
+      --frame-bg: #0f1612;
+      --card-bg: #141e19;
+      --card-subtle: #192620;
+      --card-hover: #1f3028;
+      --border-subtle: #22342b;
+      --border-strong: #2c4438;
+
+      --text-hero: #f4f8f5;
+      --text-body: #d1ded6;
+      --text-muted: #8ca395;
+      --text-dim: #5c7265;
+
+      --forest-primary: #194432;
+      --forest-card: #1a4231;
+      --forest-hover: #225943;
+      --neon-lime: #d4ff33;
+      --neon-lime-soft: rgba(212, 255, 51, 0.18);
+      --mint-glow: #34d399;
+      --mint-soft: rgba(52, 211, 153, 0.16);
+
+      --color-abc-a: #6ee7b7;
+      --color-abc-a-bg: rgba(110, 231, 183, 0.12);
+      --color-abc-b: #fbbf24;
+      --color-abc-b-bg: rgba(251, 191, 36, 0.14);
+      --color-abc-c: #94a3b8;
+      --color-abc-c-bg: rgba(148, 163, 184, 0.12);
+
+      --color-pat-smooth: #34d399;
+      --color-pat-smooth-bg: rgba(52, 211, 153, 0.16);
+      --color-pat-erratic: #38bdf8;
+      --color-pat-erratic-bg: rgba(56, 189, 248, 0.16);
+      --color-pat-intermittent: #fb923c;
+      --color-pat-intermittent-bg: rgba(251, 146, 60, 0.16);
+      --color-pat-lumpy: #fb7185;
+      --color-pat-lumpy-bg: rgba(251, 113, 133, 0.16);
+
+      --warn-badge-bg: #451a03;
+      --warn-badge-text: #fde68a;
+      --warn-badge-border: #92400e;
+
+      --shadow-frame: 0 30px 80px -15px rgba(0, 0, 0, 0.7);
+      --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.3);
+      --shadow-hover: 0 14px 32px rgba(0, 0, 0, 0.45);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background-color: var(--canvas-bg);
+      color: var(--text-body);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      padding: 1.5rem;
+      transition: background-color 0.25s ease, color 0.25s ease;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    @media (max-width: 768px) {
+      body {
+        padding: 0.5rem;
+      }
+    }
+
+    /* Outer Floating App Frame */
+    .app-frame {
+      max-width: 1540px;
+      width: 100%;
+      background: var(--frame-bg);
+      border-radius: var(--radius-frame);
+      box-shadow: var(--shadow-frame);
+      border: 1px solid var(--border-subtle);
+      display: flex;
+      overflow: hidden;
+      min-height: calc(100vh - 3rem);
+      position: relative;
+    }
+
+    @media (max-width: 1024px) {
+      .app-frame {
+        flex-direction: column;
+        border-radius: 16px;
+      }
+    }
+
+    /* Left Dock / Sidebar Navigation */
+    .app-sidebar {
+      width: 260px;
+      background: var(--frame-bg);
+      border-right: 1px solid var(--border-subtle);
+      padding: 2rem 1.25rem 1.5rem 1.25rem;
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+    }
+
+    @media (max-width: 1024px) {
+      .app-sidebar {
+        width: 100%;
+        border-right: none;
+        border-bottom: 1px solid var(--border-subtle);
+        padding: 1rem 1.25rem;
+      }
+    }
+
+    .brand-block {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 2.25rem;
+      padding-left: 0.5rem;
+    }
+
+    .brand-symbol {
+      width: 40px;
+      height: 40px;
+      background: var(--forest-primary);
+      color: var(--neon-lime);
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+      font-weight: 800;
+      box-shadow: 0 4px 12px rgba(18, 51, 38, 0.2);
+    }
+
+    .brand-title {
+      font-size: 1.15rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      color: var(--text-hero);
+    }
+
+    .brand-subtitle {
+      font-size: 0.725rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .nav-menu-title {
+      font-size: 0.7rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      padding-left: 0.75rem;
+      margin-bottom: 0.6rem;
+    }
+
+    .nav-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+
+    @media (max-width: 1024px) {
+      .nav-list {
+        flex-direction: row;
+        overflow-x: auto;
+      }
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.75rem 1rem;
+      border-radius: var(--radius-btn);
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      font-family: inherit;
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: left;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      width: 100%;
+      white-space: nowrap;
+    }
+
+    .nav-item:hover {
+      background: var(--card-subtle);
+      color: var(--text-hero);
+    }
+
+    .nav-item.active {
+      background: var(--forest-primary);
+      color: #ffffff;
+      box-shadow: 0 6px 16px rgba(18, 51, 38, 0.2);
+    }
+
+    html.dark .nav-item.active {
+      background: var(--forest-primary);
+      color: #ffffff;
+    }
+
+    .nav-item.active .nav-icon {
+      color: var(--neon-lime);
+    }
+
+    .nav-icon {
+      width: 20px;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      color: var(--text-muted);
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .nav-item:hover .nav-icon {
+      color: var(--text-hero);
+      transform: translateY(-1px);
+    }
+
+    .nav-icon svg {
+      width: 18px;
+      height: 18px;
+      stroke: currentColor;
+      display: block;
+    }
+
+    /* Sidebar Promo / Spec Badge Card */
+    .sidebar-widget {
+      margin-top: auto;
+      background: linear-gradient(145deg, var(--forest-primary), var(--forest-card));
+      border-radius: var(--radius-card);
+      padding: 1.25rem;
+      color: #ffffff;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 10px 24px -6px rgba(18, 51, 38, 0.3);
+    }
+
+    @media (max-width: 1024px) {
+      .sidebar-widget {
+        display: none;
+      }
+    }
+
+    .sidebar-widget::after {
+      content: "";
+      position: absolute;
+      top: -20px;
+      right: -20px;
+      width: 80px;
+      height: 80px;
+      background: var(--neon-lime);
+      filter: blur(40px);
+      opacity: 0.25;
+      pointer-events: none;
+    }
+
+    .widget-tag {
+      display: inline-block;
+      padding: 0.2rem 0.5rem;
+      background: var(--neon-lime-soft);
+      color: var(--neon-lime);
+      border-radius: var(--radius-pill);
+      font-size: 0.675rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      margin-bottom: 0.6rem;
+    }
+
+    .widget-title {
+      font-size: 0.95rem;
+      font-weight: 800;
+      line-height: 1.3;
+      margin-bottom: 0.4rem;
+    }
+
+    .widget-body {
+      font-size: 0.775rem;
+      color: rgba(255, 255, 255, 0.7);
+      line-height: 1.45;
+      margin-bottom: 0.8rem;
+    }
+
+    .widget-status {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--neon-lime);
+    }
+
+    .pulse-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--neon-lime);
+      box-shadow: 0 0 8px var(--neon-lime);
+      animation: pulse 1.8s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.85); }
+    }
+
+    /* Main Dashboard Workspace */
+    .app-main {
+      flex: 1;
+      padding: 2rem 2.5rem;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+
+    @media (max-width: 768px) {
+      .app-main {
+        padding: 1.25rem 1rem;
+      }
+    }
+
+    /* Top Action Bar */
+    .top-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 2rem;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+    }
+
+    .page-heading h2 {
+      font-size: 1.75rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      color: var(--text-hero);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .page-heading p {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-top: 0.2rem;
+    }
+
+    .top-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .pill-btn {
+      background: var(--card-bg);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-pill);
+      padding: 0.55rem 1.15rem;
+      font-family: inherit;
+      font-size: 0.825rem;
+      font-weight: 700;
+      color: var(--text-body);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      cursor: pointer;
+      box-shadow: var(--shadow-card);
+      transition: all 0.2s ease;
+    }
+
+    .pill-btn:hover {
+      border-color: var(--border-strong);
+      transform: translateY(-1px);
+    }
+
+    .pill-btn.primary {
+      background: var(--forest-primary);
+      color: #ffffff;
+      border-color: var(--forest-primary);
+    }
+
+    .pill-btn.primary:hover {
+      background: var(--forest-hover);
+    }
+
+    .theme-toggle-pill {
+      background: var(--card-bg);
+      border: 1px solid var(--border-subtle);
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: var(--text-hero);
+      font-size: 1.1rem;
+      box-shadow: var(--shadow-card);
+      transition: all 0.2s ease;
+    }
+
+    .theme-toggle-pill:hover {
+      border-color: var(--border-strong);
+      transform: scale(1.05);
+    }
+
+    /* Content Tabs */
+    .tab-content {
+      display: none;
+      animation: fadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Hero KPI Bento Grid (Inspired by Donezo / Nixtio) */
+    .kpi-bento {
+      display: grid;
+      grid-template-columns: 1.4fr 1fr 1fr 1fr;
+      gap: 1.25rem;
+      margin-bottom: 2rem;
+    }
+
+    @media (max-width: 1200px) {
+      .kpi-bento {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 640px) {
+      .kpi-bento {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .bento-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-card);
+      padding: 1.5rem;
+      position: relative;
+      box-shadow: var(--shadow-card);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .bento-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-hover);
+    }
+
+    /* Signature Donezo Hero Card */
+    .bento-card.hero-dark {
+      background: var(--forest-card);
+      color: #ffffff;
+      border: 1px solid var(--forest-primary);
+    }
+
+    .bento-card.hero-dark .bento-label {
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    .bento-card.hero-dark .bento-val {
+      color: #ffffff;
+    }
+
+    .bento-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.25rem;
+    }
+
+    .bento-label {
+      font-size: 0.775rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+    }
+
+    .bento-arrow {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: var(--card-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.95rem;
+      color: var(--text-hero);
+      transition: transform 0.2s;
+    }
+
+    .bento-card.hero-dark .bento-arrow {
+      background: rgba(255, 255, 255, 0.12);
+      color: var(--neon-lime);
+    }
+
+    .bento-card:hover .bento-arrow {
+      transform: rotate(45deg);
+    }
+
+    .bento-val {
+      font-size: 2.15rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      color: var(--text-hero);
+      line-height: 1.1;
+      margin-bottom: 0.6rem;
+    }
+
+    .bento-pill-note {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.25rem 0.6rem;
+      background: var(--card-subtle);
+      border-radius: var(--radius-pill);
+      font-size: 0.725rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      width: fit-content;
+    }
+
+    .bento-card.hero-dark .bento-pill-note {
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--neon-lime);
+    }
+
+    /* Section Cards */
+    .bento-grid-2 {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    @media (max-width: 1024px) {
+      .bento-grid-2 {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .card-shell {
+      background: var(--card-bg);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-card);
+      padding: 1.75rem;
+      box-shadow: var(--shadow-card);
+      margin-bottom: 1.5rem;
+    }
+
+    .card-shell-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .card-shell-title {
+      font-size: 1.15rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: var(--text-hero);
+    }
+
+    .card-shell-desc {
+      font-size: 0.825rem;
+      color: var(--text-muted);
+      margin-top: 0.2rem;
+    }
+
+    /* Charts */
+    .chart-container-lg {
+      position: relative;
+      height: 400px;
+      width: 100%;
+    }
+
+    .chart-container-md {
+      position: relative;
+      height: 320px;
+      width: 100%;
+    }
+
+    /* Badges & Tags */
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.25rem 0.7rem;
+      border-radius: var(--radius-pill);
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      line-height: 1;
+    }
+
+    .chip-a { background: var(--color-abc-a-bg); color: var(--color-abc-a); }
+    .chip-b { background: var(--color-abc-b-bg); color: var(--color-abc-b); }
+    .chip-c { background: var(--color-abc-c-bg); color: var(--color-abc-c); }
+
+    .chip-smooth { background: var(--color-pat-smooth-bg); color: var(--color-pat-smooth); }
+    .chip-erratic { background: var(--color-pat-erratic-bg); color: var(--color-pat-erratic); }
+    .chip-intermittent { background: var(--color-pat-intermittent-bg); color: var(--color-pat-intermittent); }
+    .chip-lumpy { background: var(--color-pat-lumpy-bg); color: var(--color-pat-lumpy); }
+
+    .chip-warning {
+      background: var(--warn-badge-bg);
+      color: var(--warn-badge-text);
+      border: 1px solid var(--warn-badge-border);
+    }
+
+    /* Filters & Inputs */
+    .filter-bar {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    .custom-select, .custom-input {
+      background: var(--card-subtle);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-btn);
+      padding: 0.6rem 1rem;
+      font-family: inherit;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-hero);
+      outline: none;
+      transition: all 0.2s ease;
+    }
+
+    .custom-select:focus, .custom-input:focus {
+      border-color: var(--forest-primary);
+      background: var(--card-bg);
+    }
+
+    /* Data Tables with Neo-Modern Minimalist Styling */
+    .table-dock {
+      overflow-x: auto;
+      border-radius: 14px;
+      border: 1px solid var(--border-subtle);
+    }
+
+    .modern-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      font-size: 0.85rem;
+      text-align: left;
+    }
+
+    .modern-table thead th {
+      background: var(--card-subtle);
+      color: var(--text-muted);
+      font-size: 0.725rem;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 0.9rem 1.15rem;
+      border-bottom: 1px solid var(--border-subtle);
+      cursor: pointer;
+      user-select: none;
+      white-space: nowrap;
+    }
+
+    .modern-table thead th:hover {
+      color: var(--text-hero);
+    }
+
+    .modern-table tbody td {
+      padding: 0.95rem 1.15rem;
+      border-bottom: 1px solid var(--border-subtle);
+      color: var(--text-body);
+      white-space: nowrap;
+      transition: background-color 0.15s;
+    }
+
+    .modern-table tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    .modern-table tbody tr:hover td {
+      background-color: var(--card-hover);
+    }
+
+    .modern-table tr.highlight-row td {
+      background-color: rgba(245, 158, 11, 0.05);
+    }
+
+    .font-mono-val {
+      font-family: var(--font-mono);
+      font-size: 0.825rem;
+    }
+
+    .text-highlight {
+      font-weight: 700;
+      color: var(--mint-glow);
+    }
+
+    /* Custom Table Pagination */
+    .table-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-top: 1.25rem;
+      flex-wrap: wrap;
+      gap: 1rem;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .nav-pagination {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .pag-btn {
+      padding: 0.4rem 0.85rem;
+      border-radius: 8px;
+      border: 1px solid var(--border-subtle);
+      background: var(--card-bg);
+      font-family: inherit;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--text-body);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .pag-btn:hover:not(:disabled) {
+      background: var(--card-subtle);
+      border-color: var(--border-strong);
+    }
+
+    .pag-btn:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+    }
+
+    /* Findings Grid Cards */
+    .findings-bento {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+      gap: 1.25rem;
+    }
+
+    .f-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-card);
+      padding: 1.5rem;
+      position: relative;
+      box-shadow: var(--shadow-card);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: all 0.25s ease;
+    }
+
+    .f-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-hover);
+    }
+
+    .f-card-top {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .f-num {
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      background: var(--forest-primary);
+      color: var(--neon-lime);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      font-weight: 800;
+    }
+
+    .f-card-title {
+      font-size: 1rem;
+      font-weight: 800;
+      color: var(--text-hero);
+    }
+
+    .f-card-body {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+
+    /* Footer */
+    .app-footer {
+      margin-top: 3rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.775rem;
+      color: var(--text-muted);
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    /* Loading Overlay */
+    #loading-splash {
+      position: fixed;
+      inset: 0;
+      background: var(--canvas-bg);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      gap: 1.25rem;
+    }
+
+    .neo-spinner {
+      width: 48px;
+      height: 48px;
+      border: 4px solid var(--border-subtle);
+      border-top-color: var(--forest-primary);
+      border-radius: 50%;
+      animation: spin 0.7s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Loading Splash Screen -->
+  <div id="loading-splash">
+    <div class="neo-spinner"></div>
+    <div style="font-weight: 800; font-size: 1.1rem; color: var(--text-hero); letter-spacing: -0.02em;">AURA // Loading Supply Chain Intelligence</div>
+    <div style="font-size: 0.825rem; color: var(--text-muted);">Fetching client-side JSON datasets from ./data/</div>
+  </div>
+
+  <!-- Outer Dashboard Frame -->
+  <div class="app-frame">
+
+    <!-- Left Dock / Sidebar -->
+    <aside class="app-sidebar">
+      <div class="brand-block">
+        <div class="brand-symbol">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
+            <path d="M2 17l10 5 10-5"></path>
+            <path d="M2 12l10 5 10-5"></path>
+          </svg>
+        </div>
+        <div>
+          <div class="brand-title">AURA</div>
+          <div class="brand-subtitle">Supply Intelligence</div>
+        </div>
+      </div>
+
+      <div class="nav-menu-title">Main Views</div>
+      <div class="nav-list">
+        <button class="nav-item active" data-tab="view-overview">
+          <span class="nav-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="7" height="9" rx="1.5"></rect>
+              <rect x="14" y="3" width="7" height="5" rx="1.5"></rect>
+              <rect x="14" y="12" width="7" height="9" rx="1.5"></rect>
+              <rect x="3" y="16" width="7" height="5" rx="1.5"></rect>
+            </svg>
+          </span>
+          <span>Overview</span>
+        </button>
+        <button class="nav-item" data-tab="view-forecast">
+          <span class="nav-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 17l6-6 4 4 8-8"></path>
+              <path d="M14 7h7v7"></path>
+              <circle cx="9" cy="11" r="1.5" fill="currentColor"></circle>
+              <circle cx="13" cy="15" r="1.5" fill="currentColor"></circle>
+            </svg>
+          </span>
+          <span>Forecast Explorer</span>
+        </button>
+        <button class="nav-item" data-tab="view-inventory">
+          <span class="nav-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+              <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+              <line x1="12" y1="22.08" x2="12" y2="12"></line>
+            </svg>
+          </span>
+          <span>Inventory Planner</span>
+        </button>
+        <button class="nav-item" data-tab="view-performance">
+          <span class="nav-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="20" x2="18" y2="10"></line>
+              <line x1="12" y1="20" x2="12" y2="4"></line>
+              <line x1="6" y1="20" x2="6" y2="14"></line>
+              <line x1="2" y1="20" x2="22" y2="20"></line>
+              <path d="M7 6l5-3 5 3"></path>
+            </svg>
+          </span>
+          <span>Model Benchmark</span>
+        </button>
+        <button class="nav-item" data-tab="view-findings">
+          <span class="nav-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 18h6"></path>
+              <path d="M10 22h4"></path>
+              <path d="M12 2v1"></path>
+              <path d="M12 15a5 5 0 0 0 5-5c0-2.76-2.24-5-5-5s-5 2.24-5 5c0 1.63.78 3.08 2 4"></path>
+            </svg>
+          </span>
+          <span>Executive Takeaways</span>
+        </button>
+      </div>
+
+      <!-- Feature Widget: Donezo/Nixtio Style -->
+      <div class="sidebar-widget">
+        <div class="widget-tag">Autonomous Engine</div>
+        <div class="widget-title">Peak Horizon Planned</div>
+        <div class="widget-body">Next 13 weeks dynamically sized using MA4 Point Engine + LightGBM Quantile P90 uncertainty buffers.</div>
+        <div class="widget-status">
+          <div class="pulse-dot"></div>
+          <span>Active Pipeline • 1,760 SKUs</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content Canvas -->
+    <main class="app-main">
+
+      <!-- Top Action Bar -->
+      <div class="top-bar">
+        <div class="page-heading">
+          <h2 id="view-title">Demand Dynamics & Portfolio Overview</h2>
+          <p id="view-sub">Real-time telemetry across 104 calendar weeks and £18.36M in physical transactions.</p>
+        </div>
+
+        <div class="top-actions">
+          <div class="pill-btn">
+            <span style="color: var(--mint-glow); font-size: 0.9rem;">●</span>
+            <span>UCI Online Retail II</span>
+          </div>
+          <button id="theme-toggle" class="theme-toggle-pill" title="Toggle Light/Dark Display">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- ===================================================================== -->
+      <!-- TAB 1: OVERVIEW -->
+      <!-- ===================================================================== -->
+      <div id="view-overview" class="tab-content active">
+        
+        <!-- Hero Bento KPI Row -->
+        <div class="kpi-bento">
+          <!-- Primary Hero Card (Donezo Dark Card) -->
+          <div class="bento-card hero-dark">
+            <div class="bento-top">
+              <span class="bento-label">Total Invoiced Revenue</span>
+              <div class="bento-arrow">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="7" y1="17" x2="17" y2="7"></line>
+                  <polyline points="7 7 17 7 17 17"></polyline>
+                </svg>
+              </div>
+            </div>
+            <div>
+              <div class="bento-val" id="kpi-rev">£18.36M</div>
+              <div class="bento-pill-note">104 Calendar Weeks</div>
+            </div>
+          </div>
+
+          <div class="bento-card">
+            <div class="bento-top">
+              <span class="bento-label">Physical Volume Shipped</span>
+              <div class="bento-arrow">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="7" y1="17" x2="17" y2="7"></line>
+                  <polyline points="7 7 17 7 17 17"></polyline>
+                </svg>
+              </div>
+            </div>
+            <div>
+              <div class="bento-val" id="kpi-units">10.44M</div>
+              <div class="bento-pill-note">Physical units</div>
+            </div>
+          </div>
+
+          <div class="bento-card">
+            <div class="bento-top">
+              <span class="bento-label">Active Forecast SKUs</span>
+              <div class="bento-arrow">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="7" y1="17" x2="17" y2="7"></line>
+                  <polyline points="7 7 17 7 17 17"></polyline>
+                </svg>
+              </div>
+            </div>
+            <div>
+              <div class="bento-val" id="kpi-universe">1,760</div>
+              <div class="bento-pill-note">Class A & B continuing</div>
+            </div>
+          </div>
+
+          <div class="bento-card">
+            <div class="bento-top">
+              <span class="bento-label">Full Catalog Split</span>
+              <div class="bento-arrow">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="7" y1="17" x2="17" y2="7"></line>
+                  <polyline points="7 7 17 7 17 17"></polyline>
+                </svg>
+              </div>
+            </div>
+            <div>
+              <div class="bento-val" id="kpi-abc-catalog" style="font-size: 1.5rem;">1,044 A • 1,265 B</div>
+              <div class="bento-pill-note">2,526 Class C long-tail</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Charts Bento Row -->
+        <div class="bento-grid-2">
+          <div class="card-shell">
+            <div class="card-shell-header">
+              <div>
+                <div class="card-shell-title">Total Warehouse Throughput Velocity (104 Weeks)</div>
+                <div class="card-shell-desc">Weekly unit volume. Shaded red vertical zones indicate annual Christmas holiday shutdowns.</div>
+              </div>
+            </div>
+            <div class="chart-container-lg">
+              <canvas id="chart-total-trend"></canvas>
+            </div>
+          </div>
+
+          <div class="card-shell">
+            <div class="card-shell-header">
+              <div>
+                <div class="card-shell-title">Pareto Revenue Split</div>
+                <div class="card-shell-desc">Classic 80/20 commercial concentration</div>
+              </div>
+            </div>
+            <div class="chart-container-md">
+              <canvas id="chart-pareto-donut"></canvas>
+            </div>
+            <div style="margin-top: 1rem; display: flex; justify-content: center; gap: 0.75rem; font-size: 0.775rem; font-weight: 700;">
+              <span class="chip chip-a">Class A: 80% Rev</span>
+              <span class="chip chip-b">Class B: 15% Rev</span>
+              <span class="chip chip-c">Class C: 5% Rev</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ===================================================================== -->
+      <!-- TAB 2: FORECAST EXPLORER -->
+      <!-- ===================================================================== -->
+      <div id="view-forecast" class="tab-content">
+        <div class="card-shell">
+          <div class="card-shell-header">
+            <div>
+              <div class="card-shell-title">SKU Trajectory & Non-Parametric Uncertainty Fan</div>
+              <div class="card-shell-desc">Historical sales seamlessly blended into a 13-week forward trajectory bounded by empirical P10–P90 quantiles.</div>
+            </div>
+            <div class="filter-bar">
+              <label for="sku-dropdown" style="font-size: 0.8rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted);">Select Product SKU:</label>
+              <select id="sku-dropdown" class="custom-select" style="min-width: 320px;"></select>
+            </div>
+          </div>
+
+          <!-- SKU Tag Strip -->
+          <div id="sku-hero-strip" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; padding: 1.15rem 1.5rem; background: var(--card-subtle); border-radius: var(--radius-card); margin-bottom: 1.5rem;">
+            <!-- Rendered via JS -->
+          </div>
+
+          <!-- Fan Chart -->
+          <div class="chart-container-lg" style="height: 420px;">
+            <canvas id="chart-sku-fan"></canvas>
+          </div>
+
+          <!-- Numerical Breakdown -->
+          <div style="margin-top: 2rem;">
+            <div class="card-shell-title" style="font-size: 1rem; margin-bottom: 0.75rem;">13-Week Future Replenishment Schedule</div>
+            <div class="table-dock">
+              <table class="modern-table" id="table-future-traj">
+                <thead>
+                  <tr>
+                    <th>Week Horizon</th>
+                    <th>Calendar Start</th>
+                    <th>Point Forecast (MA4)</th>
+                    <th>P10 Lower Bound</th>
+                    <th>P90 Upper Bound</th>
+                    <th>80% Uncertainty Band</th>
+                    <th>Cumulative Trajectory</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===================================================================== -->
+      <!-- TAB 3: INVENTORY PLANNER -->
+      <!-- ===================================================================== -->
+      <div id="view-inventory" class="tab-content">
+        
+        <!-- Inventory Sub-KPIs -->
+        <div class="kpi-bento">
+          <div class="bento-card">
+            <div class="bento-top">
+              <span class="bento-label">Matched SKUs</span>
+              <div class="bento-arrow">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="7" y1="17" x2="17" y2="7"></line>
+                  <polyline points="7 7 17 7 17 17"></polyline>
+                </svg>
+              </div>
+            </div>
+            <div>
+              <div class="bento-val" id="inv-count">1,760</div>
+              <div class="bento-pill-note">Filtered item pool</div>
+            </div>
+          </div>
+
+          <div class="bento-card hero-dark">
+            <div class="bento-top">
+              <span class="bento-label">Total Recommended ROP</span>
+              <div class="bento-arrow">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="7" y1="17" x2="17" y2="7"></line>
+                  <polyline points="7 7 17 7 17 17"></polyline>
+                </svg>
+              </div>
+            </div>
+            <div>
+              <div class="bento-val" id="inv-rop-sum">498.4K</div>
+              <div class="bento-pill-note">Reorder point trigger units</div>
+            </div>
+          </div>
+
+          <div class="bento-card">
+            <div class="bento-top">
+              <span class="bento-label">Quantile Safety Stock</span>
+              <div class="bento-arrow">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="7" y1="17" x2="17" y2="7"></line>
+                  <polyline points="7 7 17 7 17 17"></polyline>
+                </svg>
+              </div>
+            </div>
+            <div>
+              <div class="bento-val" id="inv-qss-sum">208.6K</div>
+              <div class="bento-pill-note">Dynamic empirical buffer</div>
+            </div>
+          </div>
+
+          <div class="bento-card">
+            <div class="bento-top">
+              <span class="bento-label">Classical 95% Safety Stock</span>
+              <div class="bento-arrow">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="7" y1="17" x2="17" y2="7"></line>
+                  <polyline points="7 7 17 7 17 17"></polyline>
+                </svg>
+              </div>
+            </div>
+            <div>
+              <div class="bento-val" id="inv-c95-sum">244.3K</div>
+              <div class="bento-pill-note">Gaussian formula buffer</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card-shell">
+          <div class="card-shell-header">
+            <div>
+              <div class="card-shell-title">Replenishment Parameter Catalog</div>
+              <div class="card-shell-desc">Sizing comparison across all 1,760 SKUs. Click column headers to sort.</div>
+            </div>
+            <div class="filter-bar">
+              <input type="text" id="filter-search" class="custom-input" placeholder="Search SKU or description..." style="width: 240px;" />
+              <select id="filter-abc" class="custom-select">
+                <option value="ALL">All ABC Classes</option>
+                <option value="A">Class A Only</option>
+                <option value="B">Class B Only</option>
+              </select>
+              <select id="filter-pat" class="custom-select">
+                <option value="ALL">All Patterns</option>
+                <option value="smooth">Smooth</option>
+                <option value="erratic">Erratic</option>
+                <option value="intermittent">Intermittent</option>
+                <option value="lumpy">Lumpy</option>
+              </select>
+              <label class="pill-btn" style="cursor: pointer; user-select: none;">
+                <input type="checkbox" id="filter-disagree" style="cursor: pointer;" />
+                <span>Disagreeing Only (&gt;50%)</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="table-dock">
+            <table class="modern-table" id="inventory-grid">
+              <thead>
+                <tr>
+                  <th data-sort="stock_code">StockCode</th>
+                  <th data-sort="description">Description</th>
+                  <th data-sort="abc_class">ABC</th>
+                  <th data-sort="demand_pattern">Pattern</th>
+                  <th data-sort="lead_time_weeks">Lead Time</th>
+                  <th data-sort="mu_d">Mean Dem (&mu;d)</th>
+                  <th data-sort="ss_quantile">Quantile SS</th>
+                  <th data-sort="ss_classical_90">Classical 90%</th>
+                  <th data-sort="ss_classical_95">Classical 95%</th>
+                  <th data-sort="rop_recommended">ROP (Rec)</th>
+                  <th data-sort="disagreement_pct">Divergence</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+
+          <div class="table-footer">
+            <div id="inv-page-text">Showing 1-50 of 1,760 SKUs</div>
+            <div class="nav-pagination">
+              <button id="btn-prev" class="pag-btn">&larr; Previous</button>
+              <button id="btn-next" class="pag-btn">Next &rarr;</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ===================================================================== -->
+      <!-- TAB 4: MODEL BENCHMARK -->
+      <!-- ===================================================================== -->
+      <div id="view-performance" class="tab-content">
+        <div class="card-shell">
+          <div class="card-shell-header">
+            <div>
+              <div class="card-shell-title">Fold 3 Peak Holiday Replenishment Simulation</div>
+              <div class="card-shell-desc">Simulated continuous replenishment on 1,636 active SKUs during Q4 autumn surge (1,311,074 actual units).</div>
+            </div>
+          </div>
+
+          <div class="bento-grid-2">
+            <div class="chart-container-md" style="height: 340px;">
+              <canvas id="chart-sim-group"></canvas>
+            </div>
+            <div class="table-dock">
+              <table class="modern-table" id="table-sim-matrix">
+                <thead>
+                  <tr>
+                    <th>Inventory Strategy</th>
+                    <th>Fill Rate</th>
+                    <th>Stockout Wks</th>
+                    <th>Avg Overstock</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Analytical Callout -->
+          <div style="margin-top: 1.25rem; padding: 1.25rem 1.5rem; background: var(--card-subtle); border-radius: var(--radius-card); border-left: 4px solid var(--mint-glow);">
+            <div style="font-weight: 800; font-size: 0.95rem; color: var(--text-hero); margin-bottom: 0.35rem;">Corrected Strategic Policy Synthesis:</div>
+            <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.6;">
+              When evaluating the fair, matched-service-level comparison between <strong>Quantile ROP</strong> and <strong>Classical 90% CSL</strong>, both perform <em>comparably</em> in aggregate simulation (11.03% vs 13.89% stockouts; 79.20% vs 83.35% fill rate). Both decisively defeat the naive 4-week holding benchmark (19.75% stockout rate).<br />
+              Quantile ROP is recommended <strong>structurally</strong>: it avoids forcing a symmetric Gaussian bell curve on retail demand where 36.3% of SKUs are intermittent or lumpy, eliminating cash lockup on slow movers while dynamically capturing seasonal tail acceleration.
+            </p>
+          </div>
+        </div>
+
+        <!-- Forecasting Leaderboard Cards -->
+        <div class="bento-grid-2">
+          <div class="card-shell">
+            <div class="card-shell-title" style="margin-bottom: 0.75rem;">SKU-Level Point Forecast Leaderboard</div>
+            <div class="table-dock">
+              <table class="modern-table" id="table-sku-lead">
+                <thead>
+                  <tr>
+                    <th>Model Candidate</th>
+                    <th>WAPE (%)</th>
+                    <th>Bias (%)</th>
+                    <th>MASE</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="card-shell">
+            <div class="card-shell-title" style="margin-bottom: 0.75rem;">Macro Warehouse Aggregate Volume by Fold</div>
+            <div class="table-dock">
+              <table class="modern-table" id="table-macro-lead">
+                <thead>
+                  <tr>
+                    <th>Backtest Horizon</th>
+                    <th>Model</th>
+                    <th>Macro WAPE</th>
+                    <th>Macro Bias</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===================================================================== -->
+      <!-- TAB 5: KEY FINDINGS -->
+      <!-- ===================================================================== -->
+      <div id="view-findings" class="tab-content">
+        <div class="card-shell">
+          <div class="card-shell-header">
+            <div>
+              <div class="card-shell-title">Executive Discoveries & Strategic Roadmap</div>
+              <div class="card-shell-desc">Synthesized takeaways from data cleaning, wholesale segregation, predictive backtesting, and inventory simulation.</div>
+            </div>
+          </div>
+          <div class="findings-bento" id="bento-findings-list">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <footer class="app-footer">
+        <div>Data Source: UCI Machine Learning Repository • Online Retail II Dataset (2009–2011)</div>
+        <div>Demand Forecasting & Inventory Planning Portfolio Project • Modern HTML5 / CSS3 / Chart.js</div>
+      </footer>
+
+    </main>
+
+  </div>
+
+  <!-- Client-Side App Logic -->
+  <script>
+    const store = {
+      overview: null,
+      catalog: [],
+      catalogMap: new Map(),
+      history: {},
+      forecast: {},
+      inventory: [],
+      performance: null,
+      findings: [],
+      
+      activeSku: null,
+      invFilter: { q: '', abc: 'ALL', pat: 'ALL', disagree: false },
+      invSort: { col: 'rop_recommended', asc: false },
+      invPage: 1,
+      pageSize: 50,
+      charts: {}
+    };
+
+    // Number Formatters
+    const fmtN = (v, d = 0) => (v == null ? '-' : Number(v).toLocaleString(undefined, { minimumFractionDigits: d, maximumFractionDigits: d }));
+    const fmtC = (v) => (v == null ? '-' : '£' + Number(v).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+
+    // Chips
+    function getAbcChip(abc) {
+      const cls = (abc || '').toUpperCase();
+      return `<span class="chip chip-${cls.toLowerCase()}">Class ${cls}</span>`;
+    }
+
+    function getPatternChip(pat) {
+      const p = (pat || '').toLowerCase();
+      return `<span class="chip chip-${p}">${p.charAt(0).toUpperCase() + p.slice(1)}</span>`;
+    }
+
+    const MOON_ICON = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>`;
+    const SUN_ICON = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>`;
+
+    // Theme Management
+    function initTheme() {
+      const saved = localStorage.getItem('aura-theme') || 'light';
+      if (saved === 'dark') {
+        document.documentElement.classList.add('dark');
+        document.getElementById('theme-toggle').innerHTML = SUN_ICON;
+      } else {
+        document.documentElement.classList.remove('dark');
+        document.getElementById('theme-toggle').innerHTML = MOON_ICON;
+      }
+
+      document.getElementById('theme-toggle').addEventListener('click', () => {
+        const isDark = document.documentElement.classList.toggle('dark');
+        localStorage.setItem('aura-theme', isDark ? 'dark' : 'light');
+        document.getElementById('theme-toggle').innerHTML = isDark ? SUN_ICON : MOON_ICON;
+        refreshChartThemes();
+      });
+    }
+
+    function getChartTheme() {
+      const isDark = document.documentElement.classList.contains('dark');
+      return {
+        textColor: isDark ? '#8ca395' : '#64756b',
+        gridColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(18, 51, 38, 0.05)',
+        cardBg: isDark ? '#141e19' : '#ffffff'
+      };
+    }
+
+    function refreshChartThemes() {
+      const t = getChartTheme();
+      Object.values(store.charts).forEach(c => {
+        if (!c) return;
+        if (c.options.scales?.x) {
+          c.options.scales.x.ticks.color = t.textColor;
+          c.options.scales.x.grid.color = t.gridColor;
+        }
+        if (c.options.scales?.y) {
+          c.options.scales.y.ticks.color = t.textColor;
+          c.options.scales.y.grid.color = t.gridColor;
+        }
+        if (c.options.plugins?.legend) {
+          c.options.plugins.legend.labels.color = t.textColor;
+        }
+        c.update();
+      });
+    }
+
+    // Navigation Tabs
+    function initNav() {
+      const navItems = document.querySelectorAll('.nav-item');
+      const titles = {
+        'view-overview': ['Demand Dynamics & Portfolio Overview', 'Real-time telemetry across 104 calendar weeks and £18.36M in physical transactions.'],
+        'view-forecast': ['SKU Trajectory & Uncertainty Fan Chart', 'Next-13-week point prediction bounded by calibrated empirical quantiles.'],
+        'view-inventory': ['Inventory Replenishment & Buffer Sizing', 'Parametric vs. Quantile buffers across the 1,760 universe catalog.'],
+        'view-performance': ['Model Benchmark & 4-Policy Simulation', 'Peak holiday Fold 3 simulation and multi-fold WAPE leaderboards.'],
+        'view-findings': ['Executive Discoveries & Strategic Roadmap', 'Core findings for supply chain decision makers.']
+      };
+
+      navItems.forEach(btn => {
+        btn.addEventListener('click', () => {
+          navItems.forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+
+          const tabId = btn.getAttribute('data-tab');
+          document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
+          const target = document.getElementById(tabId);
+          if (target) target.classList.add('active');
+
+          const [h, s] = titles[tabId] || ['Supply Intelligence', ''];
+          document.getElementById('view-title').innerText = h;
+          document.getElementById('view-sub').innerText = s;
+
+          window.dispatchEvent(new Event('resize'));
+        });
+      });
+    }
+
+    // Load Datasets
+    async function loadData() {
+      try {
+        const [oRes, cRes, hRes, fRes, iRes, pRes, kRes] = await Promise.all([
+          fetch('data/overview.json'),
+          fetch('data/sku_catalog.json'),
+          fetch('data/sku_history.json'),
+          fetch('data/sku_forecast.json'),
+          fetch('data/inventory_policy.json'),
+          fetch('data/model_performance.json'),
+          fetch('data/key_findings.json')
+        ]);
+
+        store.overview = await oRes.json();
+        store.catalog = await cRes.json();
+        store.history = await hRes.json();
+        store.forecast = await fRes.json();
+        store.inventory = await iRes.json();
+        store.performance = await pRes.json();
+        store.findings = (await kRes.json()).findings;
+
+        store.catalog.forEach(item => store.catalogMap.set(item.stock_code, item));
+
+        document.getElementById('loading-splash').style.display = 'none';
+
+        renderTab1();
+        renderTab2();
+        renderTab3();
+        renderTab4();
+        renderTab5();
+
+      } catch (err) {
+        console.error('Data load failure:', err);
+        document.getElementById('loading-splash').innerHTML = `
+          <div style="background: var(--card-bg); padding: 2rem; border-radius: var(--radius-card); border: 1px solid var(--border-subtle); max-width: 500px; text-align: center; box-shadow: var(--shadow-sm);">
+            <div style="margin-bottom: 0.75rem; color: var(--coral);">
+              <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="8" x2="12" y2="12"></line>
+                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+              </svg>
+            </div>
+            <div style="font-weight: 800; font-size: 1.15rem; color: var(--text-hero); margin-bottom: 0.5rem;">CORS Access Restriction</div>
+            <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 1rem;">
+              Direct <code>file://</code> URL requests to local JSON are blocked by modern browser security. Launch the built-in HTTP server:
+            </p>
+            <div style="background: var(--card-subtle); padding: 0.75rem; border-radius: 8px; font-family: monospace; font-size: 0.8rem; margin-bottom: 0.75rem;">
+              python3 -m http.server 8000
+            </div>
+            <div style="font-size: 0.775rem; color: var(--text-dim);">Then visit <code>http://localhost:8000</code> in your browser.</div>
+          </div>
+        `;
+      }
+    }
+
+    // =========================================================================
+    // TAB 1: OVERVIEW
+    // =========================================================================
+    function renderTab1() {
+      const o = store.overview;
+      document.getElementById('kpi-rev').innerText = fmtC(o.total_revenue);
+      document.getElementById('kpi-units').innerText = `${fmtN(o.total_units / 1e6, 2)}M`;
+      document.getElementById('kpi-universe').innerText = store.catalog.length.toLocaleString();
+      
+      const counts = o.sku_counts || { A: 1044, B: 1265, C: 2526 };
+      document.getElementById('kpi-abc-catalog').innerText = `${fmtN(counts.A)} A • ${fmtN(counts.B)} B`;
+
+      // 1. Weekly Total Demand Trend
+      const t = getChartTheme();
+      const ctxTrend = document.getElementById('chart-total-trend').getContext('2d');
+      const closedSet = new Set(o.closed_weeks || []);
+
+      const closedWeekPlugin = {
+        id: 'closedWeekPlugin',
+        beforeDraw: (chart) => {
+          const { ctx, chartArea: { top, bottom }, scales: { x } } = chart;
+          ctx.save();
+          chart.data.labels.forEach((lbl, idx) => {
+            if (closedSet.has(lbl)) {
+              const xPos = x.getPixelForTick(idx);
+              const width = Math.max(14, x.width / chart.data.labels.length);
+              ctx.fillStyle = 'rgba(225, 29, 72, 0.22)';
+              ctx.fillRect(xPos - width / 2, top, width, bottom - top);
+            }
+          });
+          ctx.restore();
+        }
+      };
+
+      store.charts.totalTrend = new Chart(ctxTrend, {
+        type: 'line',
+        data: {
+          labels: o.weekly_total.map(w => w.week_start),
+          datasets: [{
+            label: 'Weekly Demand (Units)',
+            data: o.weekly_total.map(w => w.qty),
+            borderColor: '#123326',
+            backgroundColor: 'rgba(18, 51, 38, 0.08)',
+            borderWidth: 2.5,
+            pointRadius: 1.5,
+            pointHoverRadius: 6,
+            pointHoverBackgroundColor: '#cbf33e',
+            pointHoverBorderColor: '#123326',
+            fill: true,
+            tension: 0.15
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: '#123326',
+              titleColor: '#ffffff',
+              bodyColor: '#cbf33e',
+              padding: 10,
+              cornerRadius: 8,
+              callbacks: {
+                label: (ctx) => {
+                  const lbl = ctx.label;
+                  let txt = `Units: ${ctx.parsed.y.toLocaleString()}`;
+                  if (closedSet.has(lbl)) txt += ' [CLOSED HOLIDAY WEEK]';
+                  return txt;
+                }
+              }
+            }
+          },
+          scales: {
+            x: {
+              ticks: { color: t.textColor, maxTicksLimit: 12 },
+              grid: { color: t.gridColor }
+            },
+            y: {
+              ticks: { color: t.textColor },
+              grid: { color: t.gridColor },
+              beginAtZero: true
+            }
+          }
+        },
+        plugins: [closedWeekPlugin]
+      });
+
+      // 2. Pareto Donut
+      const ctxDonut = document.getElementById('chart-pareto-donut').getContext('2d');
+      store.charts.pareto = new Chart(ctxDonut, {
+        type: 'doughnut',
+        data: {
+          labels: ['Class A (80% Revenue)', 'Class B (15% Revenue)', 'Class C (5% Revenue)'],
+          datasets: [{
+            data: [80.0, 15.0, 5.0],
+            backgroundColor: ['#123326', '#d97706', '#64756b'],
+            borderWidth: 3,
+            borderColor: t.cardBg
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          cutout: '72%',
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: '#123326',
+              padding: 10,
+              cornerRadius: 8
+            }
+          }
+        }
+      });
+    }
+
+    // =========================================================================
+    // TAB 2: FORECAST EXPLORER
+    // =========================================================================
+    function renderTab2() {
+      const sel = document.getElementById('sku-dropdown');
+      sel.innerHTML = '';
+
+      store.catalog.forEach(item => {
+        const opt = document.createElement('option');
+        opt.value = item.stock_code;
+        opt.innerText = `${item.stock_code} — ${item.description.substring(0, 40)}`;
+        sel.appendChild(opt);
+      });
+
+      store.activeSku = store.catalog[0].stock_code;
+      sel.value = store.activeSku;
+
+      sel.addEventListener('change', (e) => {
+        store.activeSku = e.target.value;
+        updateSkuView();
+      });
+
+      updateSkuView();
+    }
+
+    function updateSkuView() {
+      const code = store.activeSku;
+      const meta = store.catalogMap.get(code);
+      const hist = store.history[code] || [];
+      const fc = store.forecast[code] || [];
+      const inv = store.inventory.find(r => r.stock_code === code) || {};
+
+      // 1. Meta Banner Strip
+      const strip = document.getElementById('sku-hero-strip');
+      strip.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+          <span style="font-size: 1.35rem; font-weight: 800; color: var(--text-hero);">${code}</span>
+          ${getAbcChip(meta.abc_class)}
+          ${getPatternChip(meta.demand_pattern)}
+          <span class="chip" style="background: var(--card-hover); color: var(--text-muted);">${meta.lifecycle_status}</span>
+        </div>
+        <div style="display: flex; gap: 1.5rem; font-size: 0.825rem; color: var(--text-muted);">
+          <div>Unit Price: <strong style="color: var(--text-hero);">${fmtC(meta.median_price)}</strong></div>
+          <div>Mean Dem (&mu;d): <strong style="color: var(--text-hero);">${fmtN(inv.mu_d, 1)}/wk</strong></div>
+          <div>Quantile SS: <strong style="color: var(--text-hero);">${fmtN(inv.ss_quantile, 1)}</strong></div>
+          <div>ROP Recommended: <strong style="color: var(--mint-glow); font-size: 0.95rem;">${fmtN(inv.rop_recommended, 1)}</strong></div>
+        </div>
+      `;
+
+      // 2. Fan Chart
+      const t = getChartTheme();
+      const ctxFan = document.getElementById('chart-sku-fan').getContext('2d');
+
+      const allLabels = [...hist.map(h => h.week_start), ...fc.map(f => f.week_start || `Wk +${f.week_ahead}`)];
+      const histData = [...hist.map(h => h.qty), ...Array(fc.length).fill(null)];
+
+      const lastHist = hist.length > 0 ? hist[hist.length - 1].qty : null;
+      const ptData = Array(hist.length - 1).fill(null);
+      if (lastHist != null) ptData.push(lastHist);
+      fc.forEach(f => ptData.push(f.point_forecast));
+
+      const p10Data = Array(hist.length).fill(null);
+      const p90Data = Array(hist.length).fill(null);
+      fc.forEach(f => {
+        p10Data.push(f.p10);
+        p90Data.push(f.p90);
+      });
+
+      if (store.charts.skuFan) store.charts.skuFan.destroy();
+
+      store.charts.skuFan = new Chart(ctxFan, {
+        type: 'line',
+        data: {
+          labels: allLabels,
+          datasets: [
+            {
+              label: 'Retail Actuals (Last 52 Wks)',
+              data: histData,
+              borderColor: '#123326',
+              borderWidth: 2,
+              pointRadius: 2,
+              tension: 0.1
+            },
+            {
+              label: 'Production Forecast (MA4)',
+              data: ptData,
+              borderColor: '#0284c7',
+              borderWidth: 2.5,
+              borderDash: [6, 4],
+              pointRadius: 4,
+              pointBackgroundColor: '#0284c7',
+              tension: 0.1
+            },
+            {
+              label: 'P90 Upper Bound',
+              data: p90Data,
+              borderColor: 'transparent',
+              pointRadius: 0,
+              fill: false
+            },
+            {
+              label: '80% Uncertainty Band (P10–P90)',
+              data: p10Data,
+              borderColor: 'transparent',
+              backgroundColor: 'rgba(2, 132, 199, 0.14)',
+              pointRadius: 0,
+              fill: '-1'
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              labels: {
+                color: t.textColor,
+                filter: (i) => i.text !== 'P90 Upper Bound'
+              }
+            },
+            tooltip: {
+              backgroundColor: '#123326',
+              padding: 10,
+              cornerRadius: 8,
+              callbacks: {
+                label: (ctx) => {
+                  if (ctx.parsed.y == null) return null;
+                  return `${ctx.dataset.label}: ${ctx.parsed.y.toLocaleString(undefined, { maximumFractionDigits: 1 })} units`;
+                }
+              }
+            }
+          },
+          scales: {
+            x: {
+              ticks: { color: t.textColor, maxTicksLimit: 14 },
+              grid: { color: t.gridColor }
+            },
+            y: {
+              ticks: { color: t.textColor },
+              grid: { color: t.gridColor },
+              beginAtZero: true
+            }
+          }
+        }
+      });
+
+      // 3. Numerical Trajectory Table
+      const tb = document.querySelector('#table-future-traj tbody');
+      tb.innerHTML = '';
+      let cum = 0;
+      fc.forEach(r => {
+        cum += r.point_forecast;
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td class="font-mono-val" style="font-weight: 700;">Week +${r.week_ahead}</td>
+          <td class="font-mono-val">${r.week_start || '-'}</td>
+          <td class="font-mono-val text-highlight">${fmtN(r.point_forecast, 1)}</td>
+          <td class="font-mono-val">${fmtN(r.p10, 1)}</td>
+          <td class="font-mono-val">${fmtN(r.p90, 1)}</td>
+          <td class="font-mono-val">${fmtN(r.p90 - r.p10, 1)}</td>
+          <td class="font-mono-val" style="font-weight: 700;">${fmtN(cum, 1)}</td>
+        `;
+        tb.appendChild(tr);
+      });
+    }
+
+    // =========================================================================
+    // TAB 3: INVENTORY PLANNER
+    // =========================================================================
+    function renderTab3() {
+      document.getElementById('filter-search').addEventListener('input', (e) => {
+        store.invFilter.q = e.target.value.toLowerCase().trim();
+        store.invPage = 1;
+        updateInventoryGrid();
+      });
+
+      document.getElementById('filter-abc').addEventListener('change', (e) => {
+        store.invFilter.abc = e.target.value;
+        store.invPage = 1;
+        updateInventoryGrid();
+      });
+
+      document.getElementById('filter-pat').addEventListener('change', (e) => {
+        store.invFilter.pat = e.target.value;
+        store.invPage = 1;
+        updateInventoryGrid();
+      });
+
+      document.getElementById('filter-disagree').addEventListener('change', (e) => {
+        store.invFilter.disagree = e.target.checked;
+        store.invPage = 1;
+        updateInventoryGrid();
+      });
+
+      document.querySelectorAll('#inventory-grid th[data-sort]').forEach(th => {
+        th.addEventListener('click', () => {
+          const col = th.getAttribute('data-sort');
+          if (store.invSort.col === col) {
+            store.invSort.asc = !store.invSort.asc;
+          } else {
+            store.invSort.col = col;
+            store.invSort.asc = true;
+          }
+          updateInventoryGrid();
+        });
+      });
+
+      document.getElementById('btn-prev').addEventListener('click', () => {
+        if (store.invPage > 1) {
+          store.invPage--;
+          updateInventoryGrid();
+        }
+      });
+
+      document.getElementById('btn-next').addEventListener('click', () => {
+        const total = getFilteredInv().length;
+        if (store.invPage * store.pageSize < total) {
+          store.invPage++;
+          updateInventoryGrid();
+        }
+      });
+
+      updateInventoryGrid();
+    }
+
+    function getFilteredInv() {
+      const { q, abc, pat, disagree } = store.invFilter;
+      return store.inventory.filter(r => {
+        const meta = store.catalogMap.get(r.stock_code) || {};
+        if (abc !== 'ALL' && r.abc_class !== abc) return false;
+        if (pat !== 'ALL' && meta.demand_pattern !== pat) return false;
+        if (disagree && !r.disagreement_flag) return false;
+        if (q) {
+          const sc = r.stock_code.toLowerCase();
+          const desc = (meta.description || '').toLowerCase();
+          if (!sc.includes(q) && !desc.includes(q)) return false;
+        }
+        return true;
+      });
+    }
+
+    function updateInventoryGrid() {
+      const filtered = getFilteredInv();
+
+      // Top Bento KPIs for current filter view
+      const totRop = filtered.reduce((s, r) => s + (r.rop_recommended || 0), 0);
+      const totQss = filtered.reduce((s, r) => s + (r.ss_quantile || 0), 0);
+      const totC95 = filtered.reduce((s, r) => s + (r.ss_classical_95 || 0), 0);
+
+      document.getElementById('inv-count').innerText = filtered.length.toLocaleString();
+      document.getElementById('inv-rop-sum').innerText = `${fmtN(totRop / 1e3, 1)}K`;
+      document.getElementById('inv-qss-sum').innerText = `${fmtN(totQss / 1e3, 1)}K`;
+      document.getElementById('inv-c95-sum').innerText = `${fmtN(totC95 / 1e3, 1)}K`;
+
+      // Sorting
+      const { col, asc } = store.invSort;
+      filtered.sort((a, b) => {
+        let vA = a[col];
+        let vB = b[col];
+        if (col === 'description' || col === 'demand_pattern') {
+          const mA = store.catalogMap.get(a.stock_code) || {};
+          const mB = store.catalogMap.get(b.stock_code) || {};
+          vA = mA[col] || '';
+          vB = mB[col] || '';
+        }
+        if (typeof vA === 'string') {
+          return asc ? vA.localeCompare(vB) : vB.localeCompare(vA);
+        }
+        return asc ? (vA - vB) : (vB - vA);
+      });
+
+      // Pagination
+      const page = store.invPage;
+      const size = store.pageSize;
+      const total = filtered.length;
+      const start = (page - 1) * size;
+      const rows = filtered.slice(start, start + size);
+
+      const tb = document.querySelector('#inventory-grid tbody');
+      tb.innerHTML = '';
+
+      rows.forEach(r => {
+        const meta = store.catalogMap.get(r.stock_code) || {};
+        const tr = document.createElement('tr');
+        if (r.disagreement_flag) tr.classList.add('highlight-row');
+
+        tr.innerHTML = `
+          <td class="font-mono-val" style="font-weight: 700; color: var(--text-hero);">${r.stock_code}</td>
+          <td style="max-width: 240px; overflow: hidden; text-overflow: ellipsis;">${meta.description || '-'}</td>
+          <td>${getAbcChip(r.abc_class)}</td>
+          <td>${getPatternChip(meta.demand_pattern)}</td>
+          <td class="font-mono-val">${r.lead_time_weeks} wks</td>
+          <td class="font-mono-val">${fmtN(r.mu_d, 1)}</td>
+          <td class="font-mono-val" style="font-weight: 700;">${fmtN(r.ss_quantile, 1)}</td>
+          <td class="font-mono-val">${fmtN(r.ss_classical_90, 1)}</td>
+          <td class="font-mono-val">${fmtN(r.ss_classical_95, 1)}</td>
+          <td class="font-mono-val text-highlight">${fmtN(r.rop_recommended, 1)}</td>
+          <td>
+            ${r.disagreement_flag ? 
+              `<span class="chip chip-warning" title="Divergence > 50%: Classical Gaussian formula treats zero-inflated demand as symmetric dispersion; non-parametric quantiles size buffers strictly to empirical tail risk."><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -1px; margin-right: 4px;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>${fmtN(r.disagreement_pct, 1)}%</span>` 
+              : `<span class="chip" style="background: var(--card-subtle); color: var(--text-muted);">${fmtN(r.disagreement_pct, 1)}%</span>`
+            }
+          </td>
+        `;
+        tb.appendChild(tr);
+      });
+
+      const end = Math.min(start + size, total);
+      document.getElementById('inv-page-text').innerText = total > 0 ? `Showing ${start + 1}-${end} of ${total.toLocaleString()} SKUs` : 'No matching items';
+      document.getElementById('btn-prev').disabled = (page <= 1);
+      document.getElementById('btn-next').disabled = (end >= total);
+    }
+
+    // =========================================================================
+    // TAB 4: MODEL BENCHMARK
+    // =========================================================================
+    function renderTab4() {
+      const p = store.performance;
+      if (!p) return;
+
+      // 1. Simulation Matrix Table
+      const tbSim = document.querySelector('#table-sim-matrix tbody');
+      tbSim.innerHTML = '';
+      p.policy_simulation.forEach(item => {
+        const isBestFill = (item.policy === 'Classical 95% CSL');
+        const isBestStockout = (item.policy === 'Classical 95% CSL');
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><strong>${item.policy}</strong><br><span style="font-size: 0.725rem; color: var(--text-dim);">${item.target}</span></td>
+          <td class="font-mono-val ${isBestFill ? 'text-highlight' : ''}">${fmtN(item.fill_rate, 2)}%</td>
+          <td class="font-mono-val ${isBestStockout ? 'text-highlight' : ''}">${fmtN(item.stockout_pct, 2)}%</td>
+          <td class="font-mono-val">${fmtN(item.avg_overstock)} u</td>
+        `;
+        tbSim.appendChild(tr);
+      });
+
+      // 2. Grouped Simulation Chart
+      const t = getChartTheme();
+      const ctxSim = document.getElementById('chart-sim-group').getContext('2d');
+      store.charts.sim = new Chart(ctxSim, {
+        type: 'bar',
+        data: {
+          labels: p.policy_simulation.map(i => i.policy),
+          datasets: [
+            {
+              label: 'Unit Fill Rate (%)',
+              data: p.policy_simulation.map(i => i.fill_rate),
+              backgroundColor: '#123326',
+              borderRadius: 6
+            },
+            {
+              label: 'Stockout SKU-Weeks (%)',
+              data: p.policy_simulation.map(i => i.stockout_pct),
+              backgroundColor: '#e11d48',
+              borderRadius: 6
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              labels: { color: t.textColor }
+            },
+            tooltip: {
+              backgroundColor: '#123326',
+              padding: 10,
+              cornerRadius: 8
+            }
+          },
+          scales: {
+            x: {
+              ticks: { color: t.textColor },
+              grid: { color: t.gridColor }
+            },
+            y: {
+              ticks: { color: t.textColor },
+              grid: { color: t.gridColor },
+              beginAtZero: true,
+              max: 100
+            }
+          }
+        }
+      });
+
+      // 3. SKU Leaderboard Table
+      const tbSku = document.querySelector('#table-sku-lead tbody');
+      tbSku.innerHTML = '';
+      p.sku_leaderboard.forEach(m => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><strong>${m.model}</strong>${m.note ? `<br><span style="font-size: 0.7rem; color: var(--text-dim);">${m.note}</span>` : ''}</td>
+          <td class="font-mono-val ${m.is_best_wape ? 'text-highlight' : ''}">${fmtN(m.wape, 2)}%</td>
+          <td class="font-mono-val ${m.is_best_bias ? 'text-highlight' : ''}" style="${m.bias < 0 ? 'color: #e11d48;' : ''}">${m.bias > 0 ? '+' : ''}${fmtN(m.bias, 2)}%</td>
+          <td class="font-mono-val ${m.is_best_mase ? 'text-highlight' : ''}">${fmtN(m.mase, 3)}</td>
+        `;
+        tbSku.appendChild(tr);
+      });
+
+      // 4. Macro Table
+      const tbMacro = document.querySelector('#table-macro-lead tbody');
+      tbMacro.innerHTML = '';
+      p.macro_by_fold.forEach(f => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td class="font-mono-val" style="font-weight: 700;">Fold ${f.fold}</td>
+          <td>${f.model}</td>
+          <td class="font-mono-val ${f.winner ? 'text-highlight' : ''}">${fmtN(f.macro_wape, 2)}%</td>
+          <td class="font-mono-val" style="${f.macro_bias < 0 ? 'color: #e11d48;' : ''}">${f.macro_bias > 0 ? '+' : ''}${fmtN(f.macro_bias, 2)}%</td>
+          <td>${f.winner ? '<span class="chip chip-smooth">Winner</span>' : '<span style="color: var(--text-dim); font-size: 0.775rem;">Benchmark</span>'}</td>
+        `;
+        tbMacro.appendChild(tr);
+      });
+    }
+
+    // =========================================================================
+    // TAB 5: KEY FINDINGS
+    // =========================================================================
+    function renderTab5() {
+      const container = document.getElementById('bento-findings-list');
+      container.innerHTML = '';
+
+      store.findings.forEach((str, idx) => {
+        const [title, ...rest] = str.split(':');
+        const body = rest.join(':').trim();
+
+        const card = document.createElement('div');
+        card.className = 'f-card';
+        card.innerHTML = `
+          <div>
+            <div class="f-card-top">
+              <div class="f-num">${idx + 1}</div>
+              <div class="f-card-title">${title.trim()}</div>
+            </div>
+            <div class="f-card-body">${body}</div>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    // Startup
+    window.addEventListener('DOMContentLoaded', () => {
+      initTheme();
+      initNav();
+      loadData();
+    });
+  </script>
+</body>
+</html>
