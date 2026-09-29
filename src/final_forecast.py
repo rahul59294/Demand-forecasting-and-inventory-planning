@@ -70,12 +70,22 @@ def generate_final_forecasts():
     # Future 13 weeks calendar info (Weeks 104 to 116)
     last_week_start = pd.Timestamp("2011-11-28")
     future_weeks = [last_week_start + pd.Timedelta(weeks=h) for h in range(1, 14)]
+    
+    # Identify recurring closed shutdown week (Christmas/New Year, Dec 25-31)
+    closed_future_mask = [
+        bool(w.month == 12 and 24 <= w.day <= 31) for w in future_weeks
+    ]
+    closed_weeks_indices = [h for h, is_cl in enumerate(closed_future_mask, 1) if is_cl]
+    print(f"\nClosed Future Weeks Identified ({len(closed_weeks_indices)}):")
+    for h in closed_weeks_indices:
+        print(f"  Week ahead {h}: {future_weeks[h-1].strftime('%Y-%m-%d')} (FLAGGED CLOSED)")
+
     future_cal_df = pd.DataFrame({
         "week_ahead": np.arange(1, 14),
         "week_start": future_weeks,
         "month": [w.month for w in future_weeks],
         "iso_week": [w.isocalendar()[1] for w in future_weeks],
-        "is_closed_week": [False] * 13 # Assume regular open weeks
+        "is_closed_week": closed_future_mask
     })
     
     # Weeks to Christmas calculation for future weeks
@@ -200,29 +210,50 @@ def generate_final_forecasts():
     base_deploy = extract_origin_features(103)
 
     records = []
+    closed_count = 0
+    isotonic_adjusted_count = 0
+
     for h in range(1, 14):
         X_deploy_h = assemble_horizon_features(base_deploy, 103, h, is_future=True)
         pred_p10 = np.maximum(0, bst_q10.predict(X_deploy_h))
         pred_p90 = np.maximum(0, bst_q90.predict(X_deploy_h))
         w_start = future_weeks[h - 1]
+        is_closed = closed_future_mask[h - 1]
 
         for i, sku in enumerate(skus_list):
-            pt_fc = ma4_point_forecasts[sku]
-            p10_val = float(pred_p10[i])
-            p90_val = float(pred_p90[i])
+            if is_closed:
+                # Closed week: override point_forecast, p10, p90 all to 0
+                pt_clean = 0.0
+                p10_clean = 0.0
+                p90_clean = 0.0
+                closed_count += 1
+            else:
+                pt_fc = float(ma4_point_forecasts[sku])
+                p10_val = float(pred_p10[i])
+                p90_val = float(pred_p90[i])
 
-            # Ensure logical consistency: p10 <= p90 and p90 >= pt_fc
-            p10_clean = min(p10_val, pt_fc)
-            p90_clean = max(p90_val, pt_fc)
+                # Check if genuine quantile crossing exists (raw P90 < point_forecast or raw P10 > point_forecast)
+                if not (p10_val <= pt_fc <= p90_val):
+                    isotonic_adjusted_count += 1
+
+                # Isotonic sorting per SKU-week for non-closed weeks
+                # Standard quantile-crossing fix: guarantees p10 <= point <= p90 without silently inflating p90
+                q_sorted = np.sort([p10_val, pt_fc, p90_val])
+                p10_clean = float(q_sorted[0])
+                pt_clean = float(q_sorted[1])
+                p90_clean = float(q_sorted[2])
 
             records.append({
                 "StockCode": sku,
                 "week_start": w_start,
                 "week_ahead": h,
-                "point_forecast": float(pt_fc),
+                "point_forecast": float(pt_clean),
                 "p10": float(p10_clean),
                 "p90": float(p90_clean)
             })
+
+    print(f"\nClosed Week Overrides: {closed_count:,} SKU-weeks overridden to 0.0")
+    print(f"Isotonic Sorting Adjustments on Non-Closed Weeks: {isotonic_adjusted_count:,} SKU-weeks adjusted")
 
     final_fc_df = pd.DataFrame(records)
     out_path = Path("data/processed/final_forecast_next13weeks.parquet")

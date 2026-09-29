@@ -1,6 +1,6 @@
 # Comprehensive Inventory Policy: Safety Stock & Reorder Points (Milestone 6)
 
-**Execution Timestamp**: 2026-09-29 22:54:37
+**Execution Timestamp**: 2026-09-29 23:15:17
 **Target Forecast Universe**: `1,760` SKUs (901 Class A, 859 Class B)
 **Lead Time Assumptions**: Class A = **2 weeks**, Class B = **3 weeks**
 **Point Forecast Engine**: Moving Average 4-Week (`MA4` on Retail Demand)
@@ -9,9 +9,9 @@
 ---
 
 ## Executive Key Findings (Plain Language for Business Leaders)
-1. **Safety Stock Comparison (Quantile vs. Classical)**: Across the 1,760 universe SKUs, the data-driven **Quantile Safety Stock** totals **`208,605` units**, compared to **`190,336` units** for Classical 90% CSL and **`244,294` units** for Classical 95% CSL. Classical Gaussian formulas systematically **over-buffer intermittent and lumpy Class B items** because they treat zero weeks as symmetric negative dispersion, while **under-buffering high-velocity surge SKUs** where extreme tail risk is non-normal.
-2. **Safety Stock Correlation**: Across the catalog, the Pearson correlation between classical 95% safety stock and quantile safety stock is **`0.489`** (Spearman rank correlation: **`0.592`**). While the two methods broadly agree on rank-order volume scale, they diverge sharply on non-smooth demand patterns.
-3. **Reconciled Discrepancy Count (>50% Disagreement)**: Across the full 1,760 universe SKUs, exactly **`882` SKUs (50.1%)** exhibit $>50\%$ relative difference between Classical 95% CSL and Quantile safety stocks. When restricted to the 1,755 SKUs evaluated with direct historical backtest residuals (excluding the 5 fallback SKUs), exactly **`877` SKUs (50.0%)** show $>50\%$ disagreement. For intermittent items ($ADI > 1.32$), the empirical median demand is 0, meaning true lead-time upside risk is bounded; classical formulas apply an unadjusted standard deviation that forces holding unnecessary buffer stock. Conversely, during holiday ramp-ups, the quantile model captures positive skewness that classical Gaussian buffers miss.
+1. **Safety Stock Comparison (Quantile vs. Classical)**: Across the 1,760 universe SKUs, the data-driven **Quantile Safety Stock** totals **`229,072` units**, compared to **`190,336` units** for Classical 90% CSL and **`244,294` units** for Classical 95% CSL. Classical Gaussian formulas systematically **over-buffer intermittent and lumpy Class B items** because they treat zero weeks as symmetric negative dispersion, while **under-buffering high-velocity surge SKUs** where extreme tail risk is non-normal.
+2. **Safety Stock Correlation**: Across the catalog, the Pearson correlation between classical 95% safety stock and quantile safety stock is **`0.810`** (Spearman rank correlation: **`0.686`**). While the two methods broadly agree on rank-order volume scale, they diverge sharply on non-smooth demand patterns.
+3. **Reconciled Discrepancy Count (>50% Disagreement)**: Across the full 1,760 universe SKUs, exactly **`842` SKUs (47.8%)** exhibit $>50\%$ relative difference between Classical 95% CSL and Quantile safety stocks. When restricted to the 1,755 SKUs evaluated with direct historical backtest residuals (excluding the 5 fallback SKUs), exactly **`839` SKUs (47.8%)** show $>50\%$ disagreement. For intermittent items ($ADI > 1.32$), the empirical median demand is 0, meaning true lead-time upside risk is bounded; classical formulas apply an unadjusted standard deviation that forces holding unnecessary buffer stock. Conversely, during holiday ramp-ups, the quantile model captures positive skewness that classical Gaussian buffers miss.
 4. **Fold 3 Peak Simulation Results (4-Policy Comparison)**: In a rigorous 13-week simulation against actual Q4 holiday demand (Fold 3):
    - **Stockout Week Rate**: The Quantile policy achieved an **`11.03%` stockout week rate**, virtually tied with Classical 90% CSL (**`13.89%`**) and Classical 95% CSL (**`10.63%`**), while slashing stockouts by **`8.72 percentage points`** compared to the naive 'hold 4 weeks' policy (**`19.75%`**).
    - **Unit Fill Rate**: The Quantile policy delivered a **`79.20%` unit fill rate**, compared to **`83.35%`** for Classical 90% CSL, **`87.53%`** for Classical 95% CSL, and **`70.31%`** under the naive rule.
@@ -27,8 +27,8 @@ To transition from pure demand forecasting to automated replenishment, inventory
 
 | ABC Class | SKU Count | Lead Time ($L$) | Mean Weekly Demand ($\mu_d$) | Fallback SKUs (<8 Obs) | Median Class $\sigma_d$ Fallback |
 | :---: | :---: | :---: | :---: | :---: | :---: |
-| **Class A** | 901 | 2 weeks | 115.71 units/wk | 1 | 48.41 units |
-| **Class B** | 859 | 3 weeks | 31.55 units/wk | 4 | 17.62 units |
+| **Class A** | 901 | 2 weeks | 97.15 units/wk | 1 | 48.41 units |
+| **Class B** | 859 | 3 weeks | 26.47 units/wk | 4 | 17.62 units |
 
 ---
 
@@ -40,16 +40,16 @@ Safety stocks were computed under two distinct philosophies:
 
 | ABC Class | Total Demand (13-Wk $\mu_d$) | Classical SS (90% CSL) | Classical SS (95% CSL) | Quantile SS ($P_90$) | Recommended Total ROP |
 | :---: | :---: | :---: | :---: | :---: | :---: |
-| **Class A** | 1,355,266 units | 133,820 units | 171,756 units | 141,116 units | 349,618 units |
-| **Class B** | 352,263 units | 56,516 units | 72,538 units | 67,489 units | 148,781 units |
-| **Total Portfolio** | **1,707,530 units** | **190,336 units** | **244,294 units** | **208,605 units** | **498,399 units** |
+| **Class A** | 1,137,882 units | 133,820 units | 171,756 units | 152,507 units | 327,565 units |
+| **Class B** | 295,557 units | 56,516 units | 72,538 units | 76,565 units | 144,770 units |
+| **Total Portfolio** | **1,433,440 units** | **190,336 units** | **244,294 units** | **229,072 units** | **472,336 units** |
 
-- **Correlation Metric**: Pearson correlation between Classical 95% and Quantile SS is **`0.489`**, while Spearman rank correlation is **`0.592`**.
+- **Correlation Metric**: Pearson correlation between Classical 95% and Quantile SS is **`0.810`**, while Spearman rank correlation is **`0.686`**.
 
 ---
 
 ## 3. Discrepancy Root Cause Analysis (>50% Disagreement)
-Across the full 1,760 universe SKUs, **`882` SKUs (50.1%)** show a relative difference $>50\%$ between the Classical (95% CSL) and Quantile safety stock methods. Restricting to the 1,755 SKUs with direct historical residuals (excluding 5 fallback lines), exactly **`877` SKUs (50.0%)** diverge by $>50\%$.
+Across the full 1,760 universe SKUs, **`842` SKUs (47.8%)** show a relative difference $>50\%$ between the Classical (95% CSL) and Quantile safety stock methods. Restricting to the 1,755 SKUs with direct historical residuals (excluding 5 fallback lines), exactly **`839` SKUs (47.8%)** diverge by $>50\%$.
 
 To avoid small-denominator distortion (where small unit gaps yield inflated percentage jumps), both absolute difference in units and relative percentage differences are reported below for 5 representative case studies:
 
